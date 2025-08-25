@@ -1,0 +1,28 @@
+package com.example.olympicgamesdashboard.network
+
+import com.example.olympicgamesdashboard.data.CountriesResponse
+import com.example.olympicgamesdashboard.data.EventsResponse
+import retrofit2.Response
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
+import retrofit2.http.GET
+import retrofit2.http.Query
+
+interface ApiService {
+    @GET("events")
+    suspend fun getEvents(@Query("page") page : Int) : Response<EventsResponse>
+
+    @GET("countries")
+    suspend fun getCountries() : Response<CountriesResponse>
+}
+
+
+object RetrofitInstance {
+    val api: ApiService by lazy {
+        Retrofit.Builder()
+            .baseUrl("https://apis.codante.io/olympic-games/")
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+            .create(ApiService::class.java)
+    }
+}
