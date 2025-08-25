@@ -1,0 +1,34 @@
+package com.example.olympicgamesdashboard.repository
+
+import com.example.olympicgamesdashboard.network.RetrofitInstance
+import android.util.Log
+import com.example.olympicgamesdashboard.data.CountriesResponse
+import com.example.olympicgamesdashboard.data.EventsResponse
+
+class EventsRepository {
+    suspend fun fetchCountries(): CountriesResponse? {
+        return try {
+            val response = RetrofitInstance.api.getCountries()
+            if (response.isSuccessful && response.body()?.data?.isNotEmpty()!!) {
+                return response.body()
+            } else {
+                Log.d("Error", "Response not fetched correctly")
+                null
+            }
+        }catch(e : Exception) {
+            Log.d("Error", e.javaClass.name)
+            null
+        }
+    }
+
+    suspend fun fetchAllEvents(): EventsResponse? {
+        val response = RetrofitInstance.api.getEvents(1)
+        return if (response.isSuccessful && response.body()?.data?.isNotEmpty() == true) {
+            response.body()
+        } else {
+            null
+        }
+    }
+}
+
+
