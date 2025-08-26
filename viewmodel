@@ -1,0 +1,115 @@
+package com.example.olympicgamesdashboard.model
+
+
+import android.util.Log
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.example.olympicgamesdashboard.data.Country
+import com.example.olympicgamesdashboard.data.Event
+import com.example.olympicgamesdashboard.data.EventsResponse
+import com.example.olympicgamesdashboard.data.MedalType
+import com.example.olympicgamesdashboard.data.TableEntry
+import com.example.olympicgamesdashboard.network.RetrofitInstance
+import com.example.olympicgamesdashboard.repository.EventsRepository
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
+
+class DashboardViewModel : ViewModel() {
+
+    private val repository = EventsRepository()
+
+    // List countries
+    private val _countries = MutableStateFlow<List<Country>>(emptyList())
+    val countries : StateFlow<List<Country>> = _countries
+    fun loadCountries() {
+        viewModelScope.launch {
+            val response = repository.fetchCountries()
+            response?.data?. let {
+                _countries.value = it
+            }
+        }
+    }
+
+    // Discipline - Sport
+    private val _disciplineCountryMap = MutableStateFlow<MutableMap<String, MutableSet<String>>>(mutableMapOf())
+    val disciplineCountryMap: StateFlow<MutableMap<String, MutableSet<String>>> = _disciplineCountryMap
+
+    private val _countryDisciplineMap = MutableStateFlow<MutableMap<String, MutableSet<String>>>(mutableMapOf())
+    val countryDisciplineMap: StateFlow<MutableMap<String, MutableSet<String>>> = _countryDisciplineMap
+
+    fun loadDisciplineCountries() {
+        viewModelScope.launch {
+            val response = repository.fetchAllEvents()
+            val lastPage = response?.meta?.lastPage ?: 0
+
+            val tempDisciplineMap = mutableMapOf<String, MutableSet<String>>()
+
+            for (page in 1..5) {
+                val res = RetrofitInstance.api.getEvents(page)
+                val events = res.body()?.data ?: continue
+
+                for (event in events) {
+                    val key = event.disciplineName?: continue
+                    val countries = event.competitors.mapNotNull { it.countryId }
+                    val set = tempDisciplineMap.getOrPut(key) { mutableSetOf() }
+                    set.addAll(countries)
+                }
+            }
+            _disciplineCountryMap.value = tempDisciplineMap
+
+            val tempCountryMap = mutableMapOf<String, MutableSet<String>>()
+
+            for ((discipline, countries) in tempDisciplineMap) {
+                for (country in countries) {
+                    val set = tempCountryMap.getOrPut(country) { mutableSetOf() }
+                    set.add(discipline)
+                }
+            }
+            _countryDisciplineMap.value = tempCountryMap
+        }
+    }
+
+
+    private val _menEvents = MutableStateFlow(0)
+    val menEvents : StateFlow<Int> = _menEvents
+
+    private val _womenEvents = MutableStateFlow(0)
+    val womenEvents : StateFlow<Int> = _womenEvents
+    fun eventsGroupedByMenAndWomen() {
+        viewModelScope.launch {
+            _menEvents.value = 0
+            _womenEvents.value = 0
+            val response = repository.fetchAllEvents()
+            val lastPage = response?.meta?.lastPage?:0
+
+            for(page in 1..10){
+                val res = RetrofitInstance.api.getEvents(page)
+                val events = res.body()?.data?:continue
+
+                for(event in events){
+                    if((event.genderCode ?: "") == "M"){
+                        _menEvents.value = _menEvents.value + 1
+                    }else{
+                        _womenEvents.value = _womenEvents.value + 1
+                    }
+                }
+            }
+        }
+    }
+
+
+    private val _tableRanking = MutableStateFlow<List<TableEntry>>(mutableListOf())
+    val tableRanking : StateFlow<List<TableEntry>> = _tableRanking
+    fun getTableRanking() {
+        viewModelScope.launch {
+            val response = repository.fetchCountries()
+            val countries = response?.data?:emptyList()
+
+            val tempList = countries.map {
+                TableEntry(it.id, it.totalMedals?:0, it.rank, it.rankTotalMedals)
+            }
+            _tableRanking.value = tempList
+        }
+    }
+}
