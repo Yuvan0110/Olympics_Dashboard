@@ -1,0 +1,91 @@
+package com.example.dashboard
+
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.dashboard.viewmodel.DashboardViewModel
+import com.github.mikephil.charting.charts.BarChart
+import com.github.mikephil.charting.components.Legend
+import com.github.mikephil.charting.components.XAxis
+import com.github.mikephil.charting.data.BarData
+import com.github.mikephil.charting.data.BarDataSet
+import com.github.mikephil.charting.data.BarEntry
+import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
+
+
+@Composable
+fun DisciplineCountries(
+    modifier: Modifier = Modifier,
+    dashboardViewModel: DashboardViewModel = viewModel()
+) {
+    LaunchedEffect(Unit) {
+        dashboardViewModel.loadDisciplineCountries()
+    }
+
+    val disciplineCountryMap by dashboardViewModel.disciplineCountryMap.collectAsState()
+
+    val disciplines = disciplineCountryMap.keys.toList()
+    if(disciplineCountryMap.isNotEmpty()) {
+        AndroidView(
+            modifier = modifier
+                .fillMaxWidth()
+                .height(300.dp),
+            factory = { context -> BarChart(context) },
+            update = { chart ->
+                val entries = disciplines.mapIndexed { index, discipline ->
+                    BarEntry(index.toFloat(), disciplineCountryMap[discipline]?.size?.toFloat() ?: 0f)
+                }
+
+                val barDataset = BarDataSet(entries, "Sports-Countries participated")
+
+                val barData = BarData(barDataset)
+
+                chart.data = barData
+
+                chart.xAxis.apply {
+                    valueFormatter = IndexAxisValueFormatter(disciplines)
+                    position = XAxis.XAxisPosition.BOTTOM
+                    granularity = 1f
+                    setDrawGridLines(false)
+                    labelRotationAngle = -45f
+                    labelCount = disciplines.size
+                }
+
+                chart.axisLeft.setDrawGridLines(false)
+                chart.axisLeft.axisMinimum = 0f
+                chart.axisRight.isEnabled = false
+                chart.description.isEnabled = false
+                chart.legend.apply {
+                    isEnabled = true
+                    verticalAlignment = Legend.LegendVerticalAlignment.TOP
+                    horizontalAlignment = Legend.LegendHorizontalAlignment.RIGHT
+                }
+                chart.isDragEnabled = true
+                chart.setScaleEnabled(true)
+                chart.setPinchZoom(true)
+                chart.setVisibleXRangeMaximum(6f)
+                chart.moveViewToX(0f)
+                chart.invalidate()
+            }
+        )
+    }else{
+        Box(
+            modifier = modifier
+                .fillMaxWidth()
+                .height(300.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Text("Loading chart data...")
+        }
+    }
+}

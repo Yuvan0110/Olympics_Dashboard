@@ -1,5 +1,6 @@
 package com.example.dashboard.data
 
+
 import com.google.gson.annotations.SerializedName
 
 data class CountriesResponse (

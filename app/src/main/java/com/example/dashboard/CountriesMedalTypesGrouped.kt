@@ -1,5 +1,6 @@
 package com.example.dashboard
 
+import android.graphics.Color
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.Composable
@@ -12,7 +13,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.dashboard.viewmodel.DashboardViewModel
 import com.github.mikephil.charting.charts.BarChart
-import com.github.mikephil.charting.charts.HorizontalBarChart
+import com.github.mikephil.charting.components.Legend
 import com.github.mikephil.charting.components.XAxis
 import com.github.mikephil.charting.data.BarData
 import com.github.mikephil.charting.data.BarDataSet
@@ -20,7 +21,7 @@ import com.github.mikephil.charting.data.BarEntry
 import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
 
 @Composable
-fun GroupedCountryMedalsBarChart(
+fun CountryMedalsBarChart(
     modifier: Modifier = Modifier,
     dashboardViewModel: DashboardViewModel = viewModel()
 ) {
@@ -33,8 +34,8 @@ fun GroupedCountryMedalsBarChart(
     AndroidView(
         modifier = modifier
             .fillMaxWidth()
-            .height(400.dp),
-        factory = { context -> HorizontalBarChart(context) },
+            .height(300.dp),
+        factory = { context -> BarChart(context) },
         update = { chart ->
 
             if (countries.isNotEmpty()) {
@@ -48,16 +49,13 @@ fun GroupedCountryMedalsBarChart(
                     bronzeEntries.add(BarEntry(index.toFloat(), country.bronzeMedals?.toFloat() ?: 0f))
                 }
 
-                val goldSet = BarDataSet(goldEntries, "Gold").apply { color = android.graphics.Color.rgb(255, 215, 0) }
-                val silverSet = BarDataSet(silverEntries, "Silver").apply { color = android.graphics.Color.GRAY }
-                val bronzeSet = BarDataSet(bronzeEntries, "Bronze").apply { color = android.graphics.Color.rgb(205, 127, 50) }
+                val goldSet = BarDataSet(goldEntries, "Gold").apply { color = Color.rgb(255, 215, 0) }
+                val silverSet = BarDataSet(silverEntries, "Silver").apply { color = Color.GRAY }
+                val bronzeSet = BarDataSet(bronzeEntries, "Bronze").apply { color = Color.rgb(205, 127, 50) }
 
                 val barData = BarData(goldSet, silverSet, bronzeSet)
-                val groupSpace = 0.2f
-                val barSpace = 0.05f
-                val barWidth = 0.25f
 
-                barData.barWidth = barWidth
+                barData.barWidth = 0.25f
                 chart.data = barData
 
                 val labels = countries.map { it.id ?: "" }
@@ -75,11 +73,14 @@ fun GroupedCountryMedalsBarChart(
                 chart.axisLeft.axisMinimum = 0f
                 chart.axisRight.isEnabled = false
                 chart.description.isEnabled = false
-                chart.legend.isEnabled = true
-
+                chart.legend.apply {
+                    isEnabled = true
+                    verticalAlignment = Legend.LegendVerticalAlignment.TOP
+                    horizontalAlignment = Legend.LegendHorizontalAlignment.RIGHT
+                }
 
                 chart.xAxis.axisMaximum = countries.size.toFloat()
-                chart.groupBars(0f, groupSpace, barSpace)
+                chart.groupBars(0f, 0.2f, 0.05f)
 
                 chart.isDragEnabled = true
                 chart.setScaleEnabled(true)
@@ -91,5 +92,3 @@ fun GroupedCountryMedalsBarChart(
         }
     )
 }
-
-

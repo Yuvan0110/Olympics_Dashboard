@@ -2,7 +2,6 @@ package com.example.dashboard.network
 
 import com.example.dashboard.data.CountriesResponse
 import com.example.dashboard.data.EventsResponse
-import retrofit2.Call
 import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
