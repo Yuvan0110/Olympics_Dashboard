@@ -24,7 +24,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             DashboardTheme {
-                CountryStatsList()
+                DashboardScreen()
             }
         }
     }

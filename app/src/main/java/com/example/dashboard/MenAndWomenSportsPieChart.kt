@@ -2,6 +2,7 @@ package com.example.dashboard
 
 import android.graphics.Color
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.material3.Text
@@ -45,45 +46,51 @@ fun GroupedByGender(
             Text(text = "Loading data...")
         }
     } else {
-        AndroidView(
-            modifier = Modifier
-                .height(300.dp)
-                .fillMaxWidth(),
-            factory = { context -> PieChart(context) },
-            update = { chart ->
-                val entries = listOf(
-                    PieEntry(menCount.toFloat(), "Men"),
-                    PieEntry(womenCount.toFloat(), "Women")
-                )
-
-                val dataset = PieDataSet(entries, "").apply {
-                    colors = listOf(
-                        Color.parseColor("#8BC34A"),
-                        Color.parseColor("#36A2EB")
+        Box(
+            modifier = modifier
+        ) {
+            Text("Sports categorized by gender")
+            Spacer(Modifier.height(10.dp))
+            AndroidView(
+                modifier = Modifier
+                    .height(300.dp)
+                    .fillMaxWidth(),
+                factory = { context -> PieChart(context) },
+                update = { chart ->
+                    val entries = listOf(
+                        PieEntry(menCount.toFloat(), "Men"),
+                        PieEntry(womenCount.toFloat(), "Women")
                     )
-                    valueTextSize = 12f
+
+                    val dataset = PieDataSet(entries, "").apply {
+                        colors = listOf(
+                            Color.parseColor("#8BC34A"),
+                            Color.parseColor("#36A2EB")
+                        )
+                        valueTextSize = 12f
+                    }
+
+                    val pieData = PieData(dataset).apply {
+                        setValueFormatter(PercentFormatter(chart))
+                    }
+
+                    chart.isDrawHoleEnabled = false
+                    chart.data = pieData
+                    chart.setUsePercentValues(true)
+                    chart.description.isEnabled = false
+                    chart.setEntryLabelColor(Color.BLACK)
+                    chart.setEntryLabelTextSize(12f)
+
+                    chart.legend.apply {
+                        isEnabled = true
+                        textSize = 12f
+                        verticalAlignment = Legend.LegendVerticalAlignment.TOP
+                        horizontalAlignment = Legend.LegendHorizontalAlignment.RIGHT
+                    }
+
+                    chart.invalidate()
                 }
-
-                val pieData = PieData(dataset).apply {
-                    setValueFormatter(PercentFormatter(chart))
-                }
-
-                chart.isDrawHoleEnabled = false
-                chart.data = pieData
-                chart.setUsePercentValues(true)
-                chart.description.isEnabled = false
-                chart.setEntryLabelColor(Color.BLACK)
-                chart.setEntryLabelTextSize(12f)
-
-                chart.legend.apply {
-                    isEnabled = true
-                    textSize = 12f
-                    verticalAlignment = Legend.LegendVerticalAlignment.TOP
-                    horizontalAlignment = Legend.LegendHorizontalAlignment.RIGHT
-                }
-
-                chart.invalidate()
-            }
-        )
+            )
+        }
     }
 }
